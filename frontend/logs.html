@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyShield | Logs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-6 lg:p-12 min-h-screen">
+
+  <header class="flex flex-wrap justify-between items-center mb-10 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">SkyShield Logs</h1>
+      <p class="text-slate-400 text-sm">Explore recent log activity</p>
+    </div>
+    <div class="flex items-center gap-6">
+      <nav class="flex items-center gap-4 text-sm text-slate-300">
+        <a href="/" class="hover:text-white transition">Dashboard</a>
+        <a href="/logs.html" class="hover:text-white transition">Logs</a>
+        <a href="/detection.html" class="hover:text-white transition">Detection</a>
+      </nav>
+      <button id="btnClearLogs" class="text-slate-400 hover:text-red-400 text-sm transition">
+        <i class="fa-solid fa-trash-can mr-1"></i> Clear All
+      </button>
+      <button id="btnRefreshLogs" class="text-slate-400 hover:text-blue-400 text-sm transition">
+        <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="glass rounded-2xl overflow-hidden">
+    <div class="p-5 border-b border-white/10 flex justify-between items-center">
+      <h3 class="font-bold text-lg text-slate-200">
+        <i class="fa-solid fa-list text-blue-400 mr-1"></i> Recent Logs
+      </h3>
+      <span id="logsCount" class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-400 bg-slate-800/50">
+          <tr>
+            <th class="px-5 py-3">Source IP</th>
+            <th class="px-5 py-3">Bytes Sent</th>
+            <th class="px-5 py-3">Bytes Received</th>
+            <th class="px-5 py-3">Duration</th>
+            <th class="px-5 py-3">Packets</th>
+          </tr>
+        </thead>
+        <tbody id="logsBody" class="divide-y divide-white/5">
+          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">No logs yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="mt-12 text-center text-xs text-slate-600">
+    SkyShield Security Operations Center &copy; 2026 — AI-Powered Cloud Threat Detection
+  </footer>
+
+  <script src="logs_page.js"></script>
+</body>
+</html>

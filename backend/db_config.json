@@ -1,0 +1,4 @@
+{
+  "db_type": "sqlite",
+  "database_path": "aegis_cloud.db"
+}

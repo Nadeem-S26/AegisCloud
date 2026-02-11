@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyShield | Detection Results</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-6 lg:p-12 min-h-screen">
+
+  <header class="flex flex-wrap justify-between items-center mb-10 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">SkyShield Detection</h1>
+      <p class="text-slate-400 text-sm">Run analysis and review detection results</p>
+    </div>
+    <div class="flex items-center gap-6">
+      <nav class="flex items-center gap-4 text-sm text-slate-300">
+        <a href="/" class="hover:text-white transition">Dashboard</a>
+        <a href="/logs.html" class="hover:text-white transition">Logs</a>
+        <a href="/detection.html" class="hover:text-white transition">Detection</a>
+      </nav>
+      <button id="btnDetect" class="btn-primary bg-blue-600 hover:bg-blue-700">
+        <i class="fa-solid fa-radar mr-1"></i> Run Detection
+      </button>
+    </div>
+  </header>
+
+  <div class="glass rounded-2xl overflow-hidden">
+    <div class="p-5 border-b border-white/10">
+      <div class="flex justify-between items-center flex-wrap gap-4">
+        <h3 class="font-bold text-lg text-slate-200">
+          <i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-1"></i> Detection Results
+          <span id="resultsCount" class="ml-2 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
+        </h3>
+        <div class="flex gap-2 items-center flex-wrap">
+          <label class="text-xs text-slate-400">Filter:</label>
+          <select id="filterThreat" class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+            <option value="all">All Results</option>
+            <option value="Attack">Attacks Only</option>
+            <option value="Suspicious">Suspicious Only</option>
+            <option value="Normal">Normal Only</option>
+          </select>
+          <input type="text" id="filterIP" placeholder="Filter by IP..." class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 w-40">
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-400 bg-slate-800/50">
+          <tr>
+            <th class="px-5 py-3">Source IP</th>
+            <th class="px-5 py-3">Threat Label</th>
+            <th class="px-5 py-3">Threat Score</th>
+            <th class="px-5 py-3">Action Taken</th>
+            <th class="px-5 py-3">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="detectBody" class="divide-y divide-white/5">
+          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">Run detection to see results</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="mt-12 text-center text-xs text-slate-600">
+    SkyShield Security Operations Center &copy; 2026 — AI-Powered Cloud Threat Detection
+  </footer>
+
+  <script src="detect_page.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyShield | Security Operations Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-6 lg:p-12 min-h-screen">
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="flex flex-wrap justify-between items-center mb-10 gap-4">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">🛡️ Sky<span class="text-blue-500">Shield</span></h1>
+      <p class="text-slate-400 text-sm">AI-Powered Cloud Threat Detection &amp; Response</p>
+    </div>
+    <div class="flex items-center gap-6">
+      <nav class="flex items-center gap-4 text-sm text-slate-300">
+        <a href="/" class="hover:text-white transition">Dashboard</a>
+        <a href="/logs.html" class="hover:text-white transition">Logs</a>
+        <a href="/detection.html" class="hover:text-white transition">Detection</a>
+      </nav>
+      <span id="statusBadge" class="status-badge online">
+        <span id="statusDot" class="status-dot bg-green-500"></span>
+        <span id="statusText">Connecting…</span>
+      </span>
+      <button id="btnDetect" class="btn-primary bg-blue-600 hover:bg-blue-700">
+        <i class="fa-solid fa-radar mr-1"></i> Run Detection
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ METRIC CARDS ═══ -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="glass card p-6 rounded-2xl">
+      <p class="card-label">Total Logs</p>
+      <div class="flex items-end justify-between">
+        <h2 id="totalLogs" class="text-4xl font-bold">—</h2>
+        <i class="fa-solid fa-database text-blue-400 text-xl"></i>
+      </div>
+    </div>
+
+    <div id="cardAttacks" class="glass card p-6 rounded-2xl border-l-4 border-red-500 cursor-pointer hover:scale-105 transition-transform">
+      <p class="card-label text-red-400">Attacks Blocked</p>
+      <div class="flex items-end justify-between">
+        <h2 id="threatsBlocked" class="text-4xl font-bold text-red-500">—</h2>
+        <span class="pulse w-3 h-3 bg-red-500 rounded-full mb-3"></span>
+      </div>
+    </div>
+
+    <div id="cardSuspicious" class="glass card p-6 rounded-2xl border-l-4 border-orange-500 cursor-pointer hover:scale-105 transition-transform">
+      <p class="card-label text-orange-400">Suspicious</p>
+      <div class="flex items-end justify-between">
+        <h2 id="suspicious" class="text-4xl font-bold text-orange-400">—</h2>
+        <i class="fa-solid fa-triangle-exclamation text-orange-400 text-xl"></i>
+      </div>
+    </div>
+
+    <div class="glass card p-6 rounded-2xl border-l-4 border-green-500">
+      <p class="card-label text-green-400">Normal</p>
+      <div class="flex items-end justify-between">
+        <h2 id="normalCount" class="text-4xl font-bold text-green-400">—</h2>
+        <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN GRID ═══ -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+
+    <!-- ALERTS PANEL (2/3 width) -->
+    <div class="lg:col-span-2 glass rounded-2xl overflow-hidden flex flex-col" style="max-height:520px">
+      <div class="p-5 border-b border-white/10 flex justify-between items-center">
+        <h3 class="font-bold text-lg text-slate-200">
+          <i class="fa-solid fa-bell text-red-400 mr-1"></i> Live Security Alerts
+          <span id="alertCount" class="ml-2 text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">0</span>
+        </h3>
+        <button id="btnClearAlerts" class="text-slate-400 hover:text-red-400 text-sm transition">
+          <i class="fa-solid fa-trash-can mr-1"></i> Clear All
+        </button>
+      </div>
+      <ul id="alertsList" class="divide-y divide-white/5 overflow-y-auto flex-1">
+        <li class="p-6 text-center text-slate-500 text-sm" id="noAlerts">
+          <i class="fa-solid fa-shield-halved text-2xl mb-2 block"></i>
+          No alerts yet — submit logs and run detection
+        </li>
+      </ul>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="space-y-6">
+
+      <!-- HEALTH SCORE -->
+      <div class="glass p-6 rounded-2xl">
+        <h3 class="font-bold text-lg mb-4"><i class="fa-solid fa-heart-pulse text-blue-400 mr-1"></i> System Health</h3>
+        <div class="bg-slate-800/50 p-4 rounded-xl">
+          <div class="flex justify-between text-xs text-slate-400 mb-1">
+            <span>Health Score</span>
+            <span id="healthLabel" class="text-blue-400">—</span>
+          </div>
+          <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+            <div id="healthBar" class="h-full rounded-full transition-all duration-700" style="width:0%; background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e)"></div>
+          </div>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
+          <div class="bg-red-500/10 rounded-lg p-2">
+            <p class="text-red-400 font-bold text-lg" id="statAttacks">—</p>
+            <p class="text-slate-500">Attacks</p>
+          </div>
+          <div class="bg-orange-500/10 rounded-lg p-2">
+            <p class="text-orange-400 font-bold text-lg" id="statSuspicious">—</p>
+            <p class="text-slate-500">Suspicious</p>
+          </div>
+          <div class="bg-green-500/10 rounded-lg p-2">
+            <p class="text-green-400 font-bold text-lg" id="statNormal">—</p>
+            <p class="text-slate-500">Normal</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBMIT LOG FORM -->
+      <div class="glass p-6 rounded-2xl">
+        <h3 class="font-bold text-lg mb-4"><i class="fa-solid fa-paper-plane text-blue-400 mr-1"></i> Submit Log</h3>
+        <form id="logForm" class="space-y-3">
+          <input type="text" id="inputIP" placeholder="Source IP  (e.g. 192.168.1.100)" class="form-input" required>
+          <div class="grid grid-cols-2 gap-3">
+            <input type="number" id="inputBytesSent" placeholder="Bytes Sent" class="form-input" required>
+            <input type="number" id="inputBytesRecv" placeholder="Bytes Received" class="form-input" required>
+          </div>
+          <input type="number" id="inputDuration" placeholder="Flow Duration" class="form-input">
+          <input type="number" id="inputPackets" placeholder="Total Fwd Packets" class="form-input">
+          <button type="submit" class="btn-primary w-full mt-1">
+            <i class="fa-solid fa-upload mr-1"></i> Submit Log
+          </button>
+        </form>
+        <p id="logStatus" class="text-xs mt-2 text-center text-slate-500 hidden"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LOGS TABLE ═══ -->
+  <div class="glass rounded-2xl overflow-hidden mb-10">
+    <div class="p-5 border-b border-white/10 flex justify-between items-center">
+      <h3 class="font-bold text-lg text-slate-200">
+        <i class="fa-solid fa-list text-blue-400 mr-1"></i> Recent Logs
+      </h3>
+      <div class="flex items-center gap-3">
+        <button id="btnClearLogs" class="text-slate-400 hover:text-red-400 text-sm transition">
+          <i class="fa-solid fa-trash-can mr-1"></i> Clear All
+        </button>
+        <button id="btnRefreshLogs" class="text-slate-400 hover:text-blue-400 text-sm transition">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+        </button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-400 bg-slate-800/50">
+          <tr>
+            <th class="px-5 py-3">Source IP</th>
+            <th class="px-5 py-3">Bytes Sent</th>
+            <th class="px-5 py-3">Bytes Received</th>
+            <th class="px-5 py-3">Duration</th>
+            <th class="px-5 py-3">Packets</th>
+          </tr>
+        </thead>
+        <tbody id="logsBody" class="divide-y divide-white/5">
+          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">No logs yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ DETECTION RESULTS TABLE ═══ -->
+  <div class="glass rounded-2xl overflow-hidden">
+    <div class="p-5 border-b border-white/10">
+      <div class="flex justify-between items-center flex-wrap gap-4">
+        <h3 class="font-bold text-lg text-slate-200">
+          <i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-1"></i> Detection Results
+          <span id="resultsCount" class="ml-2 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
+        </h3>
+        <div class="flex gap-2 items-center flex-wrap">
+          <label class="text-xs text-slate-400">Filter:</label>
+          <select id="filterThreat" class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+            <option value="all">All Results</option>
+            <option value="Attack">🔴 Attacks Only</option>
+            <option value="Suspicious">🟠 Suspicious Only</option>
+            <option value="Normal">🟢 Normal Only</option>
+          </select>
+          <input type="text" id="filterIP" placeholder="Filter by IP..." class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 w-40">
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs uppercase text-slate-400 bg-slate-800/50">
+          <tr>
+            <th class="px-5 py-3">Source IP</th>
+            <th class="px-5 py-3">Threat Label</th>
+            <th class="px-5 py-3">Threat Score</th>
+            <th class="px-5 py-3">Action Taken</th>
+            <th class="px-5 py-3">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="detectBody" class="divide-y divide-white/5">
+          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">Run detection to see results</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ DETAILS MODAL ═══ -->
+  <div id="detailsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="glass rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="p-6 border-b border-white/10 flex justify-between items-center">
+        <h3 id="modalTitle" class="font-bold text-2xl text-slate-200">
+          <i class="fa-solid fa-shield-virus text-red-400 mr-2"></i> Attack Details
+        </h3>
+        <button id="btnCloseModal" class="text-slate-400 hover:text-white text-2xl transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto flex-1">
+        <div id="modalStats" class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+            <p class="text-3xl font-bold text-red-400" id="modalTotal">0</p>
+            <p class="text-xs text-slate-400 mt-1">Total Alerts</p>
+          </div>
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+            <p class="text-3xl font-bold text-blue-400" id="modalUniqueIPs">0</p>
+            <p class="text-xs text-slate-400 mt-1">Unique IPs</p>
+          </div>
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+            <p class="text-3xl font-bold text-orange-400" id="modalAvgScore">0.00</p>
+            <p class="text-xs text-slate-400 mt-1">Avg Threat Score</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="text-xs uppercase text-slate-400 bg-slate-800/50 sticky top-0">
+              <tr>
+                <th class="px-5 py-3">Source IP</th>
+                <th class="px-5 py-3">Threat Score</th>
+                <th class="px-5 py-3">Action Taken</th>
+                <th class="px-5 py-3">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="modalAlertsBody" class="divide-y divide-white/5">
+              <tr><td colspan="4" class="px-5 py-6 text-center text-slate-500">No alerts</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-12 text-center text-xs text-slate-600">
+    SkyShield Security Operations Center &copy; 2026 &mdash; AI-Powered Cloud Threat Detection
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
