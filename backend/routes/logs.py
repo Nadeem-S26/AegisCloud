@@ -11,7 +11,8 @@ def add_log():
 
 @logs_bp.route("/logs", methods=["GET"])
 def get_logs():
-    logs = list(logs_collection.find({}, {"_id": 0}))
+    # Return only the most recent 100 logs for performance (instead of all 24k+)
+    logs = logs_collection.find({}, {"_id": 0}, limit=100)
     return jsonify(logs)
 
 @logs_bp.route("/logs/count", methods=["GET"])

@@ -83,8 +83,8 @@ class LogsCollection:
             finally:
                 conn.close()
     
-    def find(self, query=None, projection=None):
-        """Find logs matching the query."""
+    def find(self, query=None, projection=None, limit=None):
+        """Find logs matching the query. Optionally limit results."""
         with _db_lock:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -97,6 +97,10 @@ class LogsCollection:
                     log_data = json.loads(row[1])
                     log_data["_id"] = row[0]
                     results.append(log_data)
+                
+                # Apply limit if specified
+                if limit:
+                    results = results[:limit]
                 
                 return results
             finally:

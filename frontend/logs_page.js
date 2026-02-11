@@ -1,5 +1,12 @@
 const API = "http://localhost:8000";
+function safeNumber(val) {
+  const num = Number(val) || 0;
+  return isNaN(num) ? 0 : num;
+}
 
+function formatNumber(val) {
+  return safeNumber(val).toLocaleString();
+}
 const $logsBody = document.getElementById("logsBody");
 const $logsCount = document.getElementById("logsCount");
 const $btnRefreshLogs = document.getElementById("btnRefreshLogs");
@@ -35,18 +42,17 @@ async function refreshLogs() {
     const recent = logs.slice(-50).reverse();
     $logsBody.innerHTML = recent.map(l => {
       const sourceIP = l.source_ip || l["Source IP"] || l["Src IP"] || "—";
-      const bytesSent = l.bytes_sent || l["Total Fwd Packets"] || l["Fwd Packet Length Total"] || 0;
-      const bytesRecv = l.bytes_received || l["Total Backward Packets"] || l["Bwd Packet Length Total"] || 0;
-      const duration = l["Flow Duration"] || l.duration || l["flow_duration"] || 0;
-      const packets = l["Total Fwd Packets"] || l.packets || l["total_fwd_packets"] || 0;
-
+      const bytesSent = l["Total Length of Fwd Packet"] || l["Fwd Packet Length Total"] || l.bytes_sent || 0;
+      const bytesRecv = l["Total Length of Bwd Packet"] || l["Bwd Packet Length Total"] || l.bytes_received || 0;
+      const duration = l["Flow Duration"] || l.duration || 0;
+      const packets = l["Total Fwd Packet"] || l["Total Fwd Packets"] || l.packets || 0;
       return `
         <tr class="hover:bg-white/5 transition">
           <td class="px-5 py-3 font-mono text-blue-300">${sourceIP}</td>
-          <td class="px-5 py-3">${Number(bytesSent).toLocaleString()}</td>
-          <td class="px-5 py-3">${Number(bytesRecv).toLocaleString()}</td>
-          <td class="px-5 py-3">${Number(duration).toLocaleString()}</td>
-          <td class="px-5 py-3">${Number(packets).toLocaleString()}</td>
+          <td class="px-5 py-3">${formatNumber(bytesSent)}</td>
+          <td class="px-5 py-3">${formatNumber(bytesRecv)}</td>
+          <td class="px-5 py-3">${formatNumber(duration)}</td>
+          <td class="px-5 py-3">${formatNumber(packets)}</td>
         </tr>`;
     }).join("");
   } catch (e) {

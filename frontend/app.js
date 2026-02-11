@@ -4,8 +4,6 @@
 
 const API = "http://localhost:8000";
 let knownAlertIds = new Set();
-let detectionInProgress = false;
-let allDetectionResults = [];
 
 // ── DOM refs ──
 const $totalLogs     = document.getElementById("totalLogs");
@@ -16,21 +14,16 @@ const $alertCount    = document.getElementById("alertCount");
 const $alertsList    = document.getElementById("alertsList");
 const $noAlerts      = document.getElementById("noAlerts");
 const $logsBody      = document.getElementById("logsBody");
-const $detectBody    = document.getElementById("detectBody");
 const $healthBar     = document.getElementById("healthBar");
 const $healthLabel   = document.getElementById("healthLabel");
 const $statAttacks   = document.getElementById("statAttacks");
 const $statSuspicious= document.getElementById("statSuspicious");
 const $statNormal    = document.getElementById("statNormal");
-const $logForm       = document.getElementById("logForm");
-const $logStatus     = document.getElementById("logStatus");
-const $btnDetect     = document.getElementById("btnDetect");
+
 const $btnClearAlerts= document.getElementById("btnClearAlerts");
 const $btnClearLogs  = document.getElementById("btnClearLogs");
 const $btnRefreshLogs= document.getElementById("btnRefreshLogs");
-const $filterThreat  = document.getElementById("filterThreat");
-const $filterIP      = document.getElementById("filterIP");
-const $resultsCount  = document.getElementById("resultsCount");
+const $btnDetect     = document.getElementById("btnDetect");
 
 // Modal elements
 const $detailsModal   = document.getElementById("detailsModal");
@@ -162,21 +155,20 @@ async function refreshLogs() {
     // Show latest 10
     const recent = logs.slice(-10).reverse();
     $logsBody.innerHTML = recent.map(l => {
-      // Handle multiple possible field names
+      // Handle multiple possible field names (matched to actual Kaggle CICIDS column names)
       const sourceIP = l.source_ip || l["Source IP"] || l["Src IP"] || "—";
-      const bytesSent = l.bytes_sent || l["Total Fwd Packets"] || l["Fwd Packet Length Total"] || 0;
-      const bytesRecv = l.bytes_received || l["Total Backward Packets"] || l["Bwd Packet Length Total"] || 0;
-      const duration = l["Flow Duration"] || l.duration || l["flow_duration"] || 0;
-      const packets = l["Total Fwd Packets"] || l.packets || l["total_fwd_packets"] || 0;
-      
+      const bytesSent = l["Total Length of Fwd Packet"] || l["Fwd Packet Length Total"] || l.bytes_sent || 0;
+      const bytesRecv = l["Total Length of Bwd Packet"] || l["Bwd Packet Length Total"] || l.bytes_received || 0;
+      const duration = l["Flow Duration"] || l.duration || 0;
+      const packets = l["Total Fwd Packet"] || l["Total Fwd Packets"] || l.packets || 0;
       return `
-      <tr class="hover:bg-white/5 transition">
-        <td class="px-5 py-3 font-mono text-blue-300">${sourceIP}</td>
-        <td class="px-5 py-3">${Number(bytesSent).toLocaleString()}</td>
-        <td class="px-5 py-3">${Number(bytesRecv).toLocaleString()}</td>
-        <td class="px-5 py-3">${Number(duration).toLocaleString()}</td>
-        <td class="px-5 py-3">${Number(packets).toLocaleString()}</td>
-      </tr>`;
+        <tr class="hover:bg-white/5 transition">
+          <td class="px-5 py-3 font-mono text-blue-300">${sourceIP}</td>
+          <td class="px-5 py-3">${formatNumber(bytesSent)}</td>
+          <td class="px-5 py-3">${formatNumber(bytesRecv)}</td>
+          <td class="px-5 py-3">${formatNumber(duration)}</td>
+          <td class="px-5 py-3">${formatNumber(packets)}</td>
+        </tr>`;
     }).join("");
 
   } catch (e) {
@@ -184,60 +176,21 @@ async function refreshLogs() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  SUBMIT LOG
-// ═══════════════════════════════════════════════════════════
-
-$logForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  showLogStatus("Submitting…", "text-blue-400");
-
-  const log = {
-    source_ip:       document.getElementById("inputIP").value.trim(),
-    bytes_sent:      Number(document.getElementById("inputBytesSent").value),
-    bytes_received:  Number(document.getElementById("inputBytesRecv").value),
-    "Flow Duration": Number(document.getElementById("inputDuration").value || 0),
-    "Total Fwd Packets": Number(document.getElementById("inputPackets").value || 0),
-  };
-
-  try {
-    await api("/logs", { method: "POST", body: JSON.stringify(log) });
-    showLogStatus("✅ Log submitted!", "text-green-400");
-    $logForm.reset();
-    refreshLogs();
-    refreshStats();
-  } catch (err) {
-    showLogStatus("❌ Failed: " + err.message, "text-red-400");
-  }
-});
 
 // ═══════════════════════════════════════════════════════════
-//  RUN DETECTION (with cancellation)
+//  RUN DETECTION BUTTON
 // ═══════════════════════════════════════════════════════════
 
 $btnDetect.addEventListener("click", async () => {
-  if (detectionInProgress) {
-    // Cancel ongoing detection
-    try {
-      await api("/detect/cancel", { method: "POST" });
-      $btnDetect.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Cancelling...`;
-    } catch (err) {
-      console.error("Cancel failed:", err);
-    }
-    return;
-  }
-
-  detectionInProgress = true;
-  $btnDetect.innerHTML = `<i class="fa-solid fa-stop mr-1"></i> Stop Analysis`;
-  $btnDetect.className = $btnDetect.className.replace("bg-blue-600", "bg-red-600");
+  $btnDetect.disabled = true;
+  $btnDetect.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Analyzing...`;
 
   try {
-    // Ask user for limit (optional)
     const logCount = await api("/logs/count");
     let limit = null;
     
     if (logCount.count > 10000) {
-      const userLimit = prompt(`Found ${logCount.count.toLocaleString()} logs. Analyze how many? (Leave empty for all)`);
+      const userLimit = prompt(`Found ${formatNumber(logCount.count)} logs. Analyze how many? (Leave empty for all)`);
       if (userLimit) limit = parseInt(userLimit);
     }
 
@@ -246,19 +199,10 @@ $btnDetect.addEventListener("click", async () => {
       body: JSON.stringify({ limit: limit })
     });
 
-    const results = response.analyzed_events || [];
-    
-    // Store results for filtering
-    allDetectionResults = results;
-    
-    // Apply current filters and display
-    applyFilters();
-      
-    // Show summary
     if (response.cancelled) {
-      alert(`⚠️ Stopped! Analyzed ${response.analyzed_count.toLocaleString()} of ${response.total_logs.toLocaleString()} logs.`);
+      alert(`⚠️ Stopped! Analyzed ${formatNumber(response.analyzed_count)} of ${formatNumber(response.total_logs)} logs.`);
     } else {
-      alert(`✅ Analyzed ${response.analyzed_count.toLocaleString()} logs!`);
+      alert(`✅ Analyzed ${formatNumber(response.analyzed_count)} logs!\n\nCheck the Alerts section for results.`);
     }
 
     await Promise.all([refreshAlerts(), refreshStats()]);
@@ -266,60 +210,10 @@ $btnDetect.addEventListener("click", async () => {
   } catch (err) {
     alert("Detection failed: " + err.message);
   } finally {
-    detectionInProgress = false;
     $btnDetect.disabled = false;
     $btnDetect.innerHTML = `<i class="fa-solid fa-radar mr-1"></i> Run Detection`;
-    $btnDetect.className = $btnDetect.className.replace("bg-red-600", "bg-blue-600");
   }
 });
-
-// ═══════════════════════════════════════════════════════════
-//  FILTER DETECTION RESULTS
-// ═══════════════════════════════════════════════════════════
-
-function applyFilters() {
-  let filtered = allDetectionResults;
-  
-  // Filter by threat level
-  const threatFilter = $filterThreat.value;
-  if (threatFilter !== "all") {
-    filtered = filtered.filter(r => r.threat_label === threatFilter);
-  }
-  
-  // Filter by IP
-  const ipFilter = $filterIP.value.trim().toLowerCase();
-  if (ipFilter) {
-    filtered = filtered.filter(r => 
-      (r.source_ip || "").toLowerCase().includes(ipFilter)
-    );
-  }
-  
-  // Update results count
-  $resultsCount.textContent = filtered.length;
-  
-  // Render filtered results
-  if (filtered.length === 0) {
-    $detectBody.innerHTML = `<tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">${allDetectionResults.length === 0 ? 'No logs to analyze' : 'No results match your filters'}</td></tr>`;
-  } else {
-    $detectBody.innerHTML = filtered.map(r => {
-      const color = r.threat_label === "Attack" ? "text-red-400"
-                  : r.threat_label === "Suspicious" ? "text-orange-400"
-                  : "text-green-400";
-      return `
-        <tr class="hover:bg-white/5 transition">
-          <td class="px-5 py-3 font-mono text-blue-300">${r.source_ip}</td>
-          <td class="px-5 py-3 font-semibold ${color}">${r.threat_label}</td>
-          <td class="px-5 py-3 font-mono">${r.threat_score.toFixed(4)}</td>
-          <td class="px-5 py-3 italic ${color}">${r.action_taken}</td>
-          <td class="px-5 py-3 text-slate-400 text-xs">${formatTime(r.timestamp)}</td>
-        </tr>`;
-    }).join("");
-  }
-}
-
-// Filter event listeners
-$filterThreat.addEventListener("change", applyFilters);
-$filterIP.addEventListener("input", applyFilters);
 
 // ═══════════════════════════════════════════════════════════
 //  CLEAR ALERTS
@@ -332,7 +226,7 @@ $btnClearAlerts.addEventListener("click", async () => {
     $alertsList.innerHTML = `
       <li class="p-6 text-center text-slate-500 text-sm" id="noAlerts">
         <i class="fa-solid fa-shield-halved text-2xl mb-2 block"></i>
-        No alerts yet — submit logs and run detection
+        No alerts yet
       </li>`;
     $alertCount.textContent = "0";
     refreshStats();
@@ -347,8 +241,6 @@ $btnClearLogs.addEventListener("click", async () => {
 
   try {
     await api("/logs/clear", { method: "POST", body: JSON.stringify({ clear_alerts: true }) });
-    allDetectionResults = [];
-    applyFilters();
     refreshLogs();
     refreshAlerts();
     refreshStats();
@@ -383,13 +275,16 @@ function formatTime(iso) {
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
-
-function showLogStatus(msg, cls) {
-  $logStatus.textContent = msg;
-  $logStatus.className = `text-xs mt-2 text-center ${cls}`;
-  $logStatus.classList.remove("hidden");
-  setTimeout(() => $logStatus.classList.add("hidden"), 3000);
+function safeNumber(val) {
+  const num = Number(val) || 0;
+  return isNaN(num) ? 0 : num;
 }
+
+function formatNumber(val) {
+  return safeNumber(val).toLocaleString();
+}
+
+
 
 function setOnline(ok) {
   const dot  = document.getElementById("statusDot");
@@ -402,7 +297,7 @@ function setOnline(ok) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  DETAILS MODAL FOR ATTACKS & SUSPICIOUS
+//  ALERT DETAILS MODAL
 // ═══════════════════════════════════════════════════════════
 
 async function showAlertDetails(threatType) {
@@ -425,17 +320,30 @@ async function showAlertDetails(threatType) {
     $modalAvgScore.textContent = avgScore.toFixed(4);
     
     // Populate table
+        // Populate table with threat classification
     if (filtered.length === 0) {
-      $modalAlertsBody.innerHTML = `<tr><td colspan="4" class="px-5 py-6 text-center text-slate-500">No ${threatType.toLowerCase()} alerts found</td></tr>`;
+      $modalAlertsBody.innerHTML = `<tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">No ${threatType.toLowerCase()} alerts found</td></tr>`;
     } else {
-      const rowColor = threatType === "Attack" ? "text-red-400" : "text-orange-400";
-      $modalAlertsBody.innerHTML = filtered.map(a => `
+      $modalAlertsBody.innerHTML = filtered.map(a => {
+        // Determine threat badge color
+        let threatBadgeColor = "bg-slate-600 text-slate-200";
+        let threatText = a.threat_label || "Unknown";
+        if (a.threat_label === "Attack") {
+          threatBadgeColor = "bg-red-500/30 text-red-300";
+        } else if (a.threat_label === "Suspicious") {
+          threatBadgeColor = "bg-orange-500/30 text-orange-300";
+        } else if (a.threat_label === "Normal") {
+          threatBadgeColor = "bg-green-500/30 text-green-300";
+        }
+        return `
         <tr class="hover:bg-white/5 transition">
           <td class="px-5 py-3 font-mono text-blue-300">${a.source_ip || '—'}</td>
-          <td class="px-5 py-3 font-mono ${rowColor}">${(a.threat_score ?? 0).toFixed(4)}</td>
-          <td class="px-5 py-3 text-sm italic ${rowColor}">${a.action_taken}</td>
+          <td class="px-5 py-3 font-mono text-slate-300">${(a.threat_score ?? 0).toFixed(4)}</td>
+          <td class="px-5 py-3"><span class="inline-block px-2 py-1 rounded text-xs font-semibold ${threatBadgeColor}">${threatText}</span></td>
+          <td class="px-5 py-3 text-sm italic text-slate-400">${a.action_taken || '—'}</td>
           <td class="px-5 py-3 text-slate-400 text-xs">${formatTime(a.timestamp)}</td>
-        </tr>`).join("");
+        </tr>`;
+      }).join("");
     }
     
     // Show modal
@@ -473,7 +381,9 @@ $cardSuspicious.addEventListener("click", () => showAlertDetails("Suspicious"));
 // ═══════════════════════════════════════════════════════════
 
 (async function init() {
-  await Promise.all([refreshStats(), refreshAlerts(), refreshLogs()]);
+  refreshStats().catch(e => console.error("Stats init error:", e));
+  refreshAlerts().catch(e => console.error("Alerts init error:", e));
+  refreshLogs().catch(e => console.error("Logs init error:", e));
 })();
 
 // Auto-refresh every 5 seconds

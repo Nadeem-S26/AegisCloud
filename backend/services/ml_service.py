@@ -12,10 +12,14 @@ SCALER_PATH = os.path.join(PROJECT_ROOT, "ml", "feature_scaler.pkl")
 model = None
 feature_columns = None
 scaler = None
+_model_loaded = False
 
 def load_model():
     """Load the trained RandomForest model, feature columns, and feature scaler."""
-    global model, feature_columns, scaler
+    global model, feature_columns, scaler, _model_loaded
+    if _model_loaded:
+        return
+    _model_loaded = True
     try:
         with open(MODEL_PATH, "rb") as f:
             model = pickle.load(f)
@@ -41,9 +45,6 @@ def load_model():
         feature_columns = None
         scaler = None
 
-# Load model on import
-load_model()
-
 def predict_log(log_data: dict) -> tuple:
     """
     Predict threat level from a log entry dict.
@@ -55,13 +56,22 @@ def predict_log(log_data: dict) -> tuple:
     3. Run through RandomForest model
     4. Return threat classification
     """
+    global model
+    # Lazy load model on first use
+    load_model()
+    
     if model is None or feature_columns is None:
         return "Unknown", 0.0
 
     # Build feature vector: map log fields to model features, default 0
     input_dict = {}
     for col in feature_columns:
-        input_dict[col] = log_data.get(col, 0)
+        # Try exact match first, then try lowercase variations
+        input_dict[col] = log_data.get(col) or log_data.get(col.lower()) or 0
+    
+    # Handle NaN/None values
+    input_dict = {k: (0 if (v is None or (isinstance(v, float) and np.isnan(v))) else v) 
+                  for k, v in input_dict.items()}
 
     input_df = pd.DataFrame([input_dict], columns=feature_columns)
     
@@ -73,12 +83,16 @@ def predict_log(log_data: dict) -> tuple:
         except Exception as e:
             print(f"⚠️  Scaler error, using raw features: {e}")
     
-    probability = model.predict_proba(input_df)[0][1]  # P(attack)
+    try:
+        probability = model.predict_proba(input_df)[0][1]  # P(attack)
+    except Exception as e:
+        print(f"⚠️  Prediction error: {e}")
+        return "Error", 0.0
 
     # Classification thresholds
-    if probability > 0.8:
+    if probability > 0.6:
         label = "Attack"
-    elif probability > 0.4:
+    elif probability > 0.3:
         label = "Suspicious"
     else:
         label = "Normal"

@@ -20,7 +20,6 @@
       <nav class="flex items-center gap-4 text-sm text-slate-300">
         <a href="/" class="hover:text-white transition">Dashboard</a>
         <a href="/logs.html" class="hover:text-white transition">Logs</a>
-        <a href="/detection.html" class="hover:text-white transition">Detection</a>
       </nav>
       <span id="statusBadge" class="status-badge online">
         <span id="statusDot" class="status-dot bg-green-500"></span>
@@ -120,23 +119,6 @@
         </div>
       </div>
 
-      <!-- SUBMIT LOG FORM -->
-      <div class="glass p-6 rounded-2xl">
-        <h3 class="font-bold text-lg mb-4"><i class="fa-solid fa-paper-plane text-blue-400 mr-1"></i> Submit Log</h3>
-        <form id="logForm" class="space-y-3">
-          <input type="text" id="inputIP" placeholder="Source IP  (e.g. 192.168.1.100)" class="form-input" required>
-          <div class="grid grid-cols-2 gap-3">
-            <input type="number" id="inputBytesSent" placeholder="Bytes Sent" class="form-input" required>
-            <input type="number" id="inputBytesRecv" placeholder="Bytes Received" class="form-input" required>
-          </div>
-          <input type="number" id="inputDuration" placeholder="Flow Duration" class="form-input">
-          <input type="number" id="inputPackets" placeholder="Total Fwd Packets" class="form-input">
-          <button type="submit" class="btn-primary w-full mt-1">
-            <i class="fa-solid fa-upload mr-1"></i> Submit Log
-          </button>
-        </form>
-        <p id="logStatus" class="text-xs mt-2 text-center text-slate-500 hidden"></p>
-      </div>
     </div>
   </div>
 
@@ -173,50 +155,12 @@
     </div>
   </div>
 
-  <!-- ═══ DETECTION RESULTS TABLE ═══ -->
-  <div class="glass rounded-2xl overflow-hidden">
-    <div class="p-5 border-b border-white/10">
-      <div class="flex justify-between items-center flex-wrap gap-4">
-        <h3 class="font-bold text-lg text-slate-200">
-          <i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-1"></i> Detection Results
-          <span id="resultsCount" class="ml-2 text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
-        </h3>
-        <div class="flex gap-2 items-center flex-wrap">
-          <label class="text-xs text-slate-400">Filter:</label>
-          <select id="filterThreat" class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
-            <option value="all">All Results</option>
-            <option value="Attack">🔴 Attacks Only</option>
-            <option value="Suspicious">🟠 Suspicious Only</option>
-            <option value="Normal">🟢 Normal Only</option>
-          </select>
-          <input type="text" id="filterIP" placeholder="Filter by IP..." class="text-xs px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 w-40">
-        </div>
-      </div>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm text-left">
-        <thead class="text-xs uppercase text-slate-400 bg-slate-800/50">
-          <tr>
-            <th class="px-5 py-3">Source IP</th>
-            <th class="px-5 py-3">Threat Label</th>
-            <th class="px-5 py-3">Threat Score</th>
-            <th class="px-5 py-3">Action Taken</th>
-            <th class="px-5 py-3">Timestamp</th>
-          </tr>
-        </thead>
-        <tbody id="detectBody" class="divide-y divide-white/5">
-          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">Run detection to see results</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
   <!-- ═══ DETAILS MODAL ═══ -->
   <div id="detailsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
     <div class="glass rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
       <div class="p-6 border-b border-white/10 flex justify-between items-center">
         <h3 id="modalTitle" class="font-bold text-2xl text-slate-200">
-          <i class="fa-solid fa-shield-virus text-red-400 mr-2"></i> Attack Details
+          <i class="fa-solid fa-shield-virus text-red-400 mr-2"></i> Alert Details
         </h3>
         <button id="btnCloseModal" class="text-slate-400 hover:text-white text-2xl transition">
           <i class="fa-solid fa-xmark"></i>
