@@ -6,6 +6,7 @@
   <title>SkyShield | Security Operations Center</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="p-6 lg:p-12 min-h-screen">
@@ -62,6 +63,29 @@
       <div class="flex items-end justify-between">
         <h2 id="normalCount" class="text-4xl font-bold text-green-400">—</h2>
         <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ANALYTICS CHARTS ═══ -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <!-- Threat Distribution Chart -->
+    <div class="glass p-6 rounded-2xl">
+      <h3 class="font-bold text-lg mb-4 text-slate-200">
+        <i class="fa-solid fa-chart-pie text-blue-400 mr-2"></i> Threat Distribution
+      </h3>
+      <div class="flex items-center justify-center" style="height: 280px;">
+        <canvas id="threatChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Attack Timeline Chart -->
+    <div class="glass p-6 rounded-2xl">
+      <h3 class="font-bold text-lg mb-4 text-slate-200">
+        <i class="fa-solid fa-chart-line text-red-400 mr-2"></i> Detection Timeline
+      </h3>
+      <div class="flex items-center justify-center" style="height: 280px;">
+        <canvas id="timelineChart"></canvas>
       </div>
     </div>
   </div>
@@ -182,17 +206,18 @@
           </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left">
+                   <table class="w-full text-sm text-left">
             <thead class="text-xs uppercase text-slate-400 bg-slate-800/50 sticky top-0">
               <tr>
                 <th class="px-5 py-3">Source IP</th>
                 <th class="px-5 py-3">Threat Score</th>
+                <th class="px-5 py-3">Classification</th>
                 <th class="px-5 py-3">Action Taken</th>
                 <th class="px-5 py-3">Timestamp</th>
               </tr>
             </thead>
             <tbody id="modalAlertsBody" class="divide-y divide-white/5">
-              <tr><td colspan="4" class="px-5 py-6 text-center text-slate-500">No alerts</td></tr>
+              <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">No alerts</td></tr>
             </tbody>
           </table>
         </div>

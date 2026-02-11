@@ -36,6 +36,10 @@ const $modalAvgScore  = document.getElementById("modalAvgScore");
 const $cardAttacks    = document.getElementById("cardAttacks");
 const $cardSuspicious = document.getElementById("cardSuspicious");
 
+// Chart instances
+let threatChart = null;
+let timelineChart = null;
+
 // ═══════════════════════════════════════════════════════════
 //  FETCH HELPERS
 // ═══════════════════════════════════════════════════════════
@@ -47,6 +51,180 @@ async function api(path, opts = {}) {
   });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CHARTS INITIALIZATION
+// ═══════════════════════════════════════════════════════════
+
+function initCharts() {
+  // Threat Distribution Donut Chart
+  const ctxThreat = document.getElementById('threatChart');
+  if (ctxThreat) {
+    threatChart = new Chart(ctxThreat, {
+      type: 'doughnut',
+      data: {
+        labels: ['Attack', 'Suspicious', 'Normal'],
+        datasets: [{
+          data: [0, 0, 0],
+          backgroundColor: [
+            'rgba(239, 68, 68, 0.8)',   // Red for Attack
+            'rgba(251, 146, 60, 0.8)',  // Orange for Suspicious
+            'rgba(34, 197, 94, 0.8)'    // Green for Normal
+          ],
+          borderColor: [
+            'rgba(239, 68, 68, 1)',
+            'rgba(251, 146, 60, 1)',
+            'rgba(34, 197, 94, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: 'rgba(203, 213, 225, 0.9)',
+              padding: 15,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: 'rgba(203, 213, 225, 1)',
+            bodyColor: 'rgba(203, 213, 225, 0.8)',
+            borderColor: 'rgba(59, 130, 246, 0.5)',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: true
+          }
+        }
+      }
+    });
+  }
+
+  // Attack Timeline Line Chart
+  const ctxTimeline = document.getElementById('timelineChart');
+  if (ctxTimeline) {
+    timelineChart = new Chart(ctxTimeline, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Attacks',
+            data: [],
+            borderColor: 'rgba(239, 68, 68, 1)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Suspicious',
+            data: [],
+            borderColor: 'rgba(251, 146, 60, 1)',
+            backgroundColor: 'rgba(251, 146, 60, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: 'rgba(203, 213, 225, 0.9)',
+              padding: 15,
+              font: { size: 12 },
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            titleColor: 'rgba(203, 213, 225, 1)',
+            bodyColor: 'rgba(203, 213, 225, 0.8)',
+            borderColor: 'rgba(59, 130, 246, 0.5)',
+            borderWidth: 1,
+            padding: 12
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: 'rgba(148, 163, 184, 0.8)', font: { size: 10 } },
+            grid: { color: 'rgba(71, 85, 105, 0.3)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { 
+              color: 'rgba(148, 163, 184, 0.8)',
+              font: { size: 10 },
+              stepSize: 1
+            },
+            grid: { color: 'rgba(71, 85, 105, 0.3)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+function updateCharts(alerts) {
+  // Update Threat Distribution
+  const attackCount = alerts.filter(a => a.threat_label === 'Attack').length;
+  const suspiciousCount = alerts.filter(a => a.threat_label === 'Suspicious').length;
+  const normalCount = alerts.filter(a => a.threat_label === 'Normal').length;
+
+  if (threatChart) {
+    threatChart.data.datasets[0].data = [attackCount, suspiciousCount, normalCount];
+    threatChart.update('none');
+  }
+
+  // Update Timeline - group by time intervals (last 10 detection runs)
+  if (timelineChart && alerts.length > 0) {
+    // Sort alerts by timestamp
+    const sortedAlerts = [...alerts].sort((a, b) => 
+      new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    // Group into 10 time buckets
+    const bucketCount = Math.min(10, Math.ceil(alerts.length / 5));
+    const bucketSize = Math.ceil(sortedAlerts.length / bucketCount);
+    const timeLabels = [];
+    const attackData = [];
+    const suspData = [];
+
+    for (let i = 0; i < bucketCount; i++) {
+      const bucketAlerts = sortedAlerts.slice(i * bucketSize, (i + 1) * bucketSize);
+      if (bucketAlerts.length === 0) continue;
+
+      const attacks = bucketAlerts.filter(a => a.threat_label === 'Attack').length;
+      const suspicious = bucketAlerts.filter(a => a.threat_label === 'Suspicious').length;
+      
+      const firstTime = new Date(bucketAlerts[0].timestamp);
+      const timeLabel = firstTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      
+      timeLabels.push(timeLabel);
+      attackData.push(attacks);
+      suspData.push(suspicious);
+    }
+
+    timelineChart.data.labels = timeLabels;
+    timelineChart.data.datasets[0].data = attackData;
+    timelineChart.data.datasets[1].data = suspData;
+    timelineChart.update('none');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -89,6 +267,9 @@ async function refreshAlerts() {
   try {
     const alerts = await api("/alerts");
     $alertCount.textContent = alerts.length;
+
+    // Update charts with alert data
+    updateCharts(alerts);
 
     if (alerts.length === 0) {
       $noAlerts && ($noAlerts.style.display = "");
@@ -381,6 +562,7 @@ $cardSuspicious.addEventListener("click", () => showAlertDetails("Suspicious"));
 // ═══════════════════════════════════════════════════════════
 
 (async function init() {
+  initCharts();
   refreshStats().catch(e => console.error("Stats init error:", e));
   refreshAlerts().catch(e => console.error("Alerts init error:", e));
   refreshLogs().catch(e => console.error("Logs init error:", e));
