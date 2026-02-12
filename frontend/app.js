@@ -239,7 +239,7 @@ async function refreshStats() {
     ]);
 
     animateValue($totalLogs, logData.count);
-    animateValue($threatsBlocked, stats.blocked);
+    animateValue($threatsBlocked, stats.attacks);
     animateValue($suspicious, stats.suspicious);
     animateValue($normalCount, stats.normal);
     animateValue($statAttacks, stats.attacks);
