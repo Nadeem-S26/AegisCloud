@@ -12,57 +12,83 @@
 <body class="p-6 lg:p-12 min-h-screen">
 
   <!-- ═══ HEADER ═══ -->
-  <header class="flex flex-wrap justify-between items-center mb-10 gap-4">
+  <header class="flex flex-wrap justify-between items-center mb-10 gap-4 relative z-10">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">🛡️ Sky<span class="text-blue-500">Shield</span></h1>
-      <p class="text-slate-400 text-sm">AI-Powered Cloud Threat Detection &amp; Response</p>
+      <h1 class="text-4xl font-extrabold tracking-tight">🛡️ Sky<span class="text-blue-500">Shield</span></h1>
+      <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+        <span class="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+        AI-Powered Cloud Threat Detection &amp; Response
+      </p>
     </div>
     <div class="flex items-center gap-6">
-      <nav class="flex items-center gap-4 text-sm text-slate-300">
-        <a href="/" class="hover:text-white transition">Dashboard</a>
-        <a href="/logs.html" class="hover:text-white transition">Logs</a>
+      <nav class="flex items-center gap-5 text-sm text-slate-300">
+        <a href="/" class="hover:text-white transition-all hover:scale-105 font-medium flex items-center gap-2">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a href="/logs.html" class="hover:text-white transition-all hover:scale-105 font-medium flex items-center gap-2">
+          <i class="fa-solid fa-list-ul"></i> Logs
+        </a>
+        <a href="/detection.html" class="hover:text-white transition-all hover:scale-105 font-medium flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved"></i> Detection
+        </a>
       </nav>
       <span id="statusBadge" class="status-badge online">
-        <span id="statusDot" class="status-dot bg-green-500"></span>
+        <span id="statusDot" class="status-dot bg-green-500 status-indicator"></span>
         <span id="statusText">Connecting…</span>
       </span>
-      <button id="btnDetect" class="btn-primary bg-blue-600 hover:bg-blue-700">
-        <i class="fa-solid fa-radar mr-1"></i> Run Detection
+      <button id="btnDetect" class="btn-primary">
+        <i class="fa-solid fa-play mr-2"></i> Run Detection
       </button>
     </div>
   </header>
 
   <!-- ═══ METRIC CARDS ═══ -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-    <div class="glass card p-6 rounded-2xl">
-      <p class="card-label">Total Logs</p>
-      <div class="flex items-end justify-between">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+    <div class="glass card p-6 rounded-2xl relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all duration-500"></div>
+      <p class="card-label relative z-10">📊 Total Logs</p>
+      <div class="flex items-end justify-between relative z-10">
         <h2 id="totalLogs" class="text-4xl font-bold">—</h2>
-        <i class="fa-solid fa-database text-blue-400 text-xl"></i>
+        <i class="fa-solid fa-database text-blue-400 text-2xl opacity-80"></i>
+      </div>
+      <div class="mt-2 text-xs text-slate-500">
+        <i class="fa-solid fa-arrow-trend-up mr-1"></i> All system logs
       </div>
     </div>
 
-    <div id="cardAttacks" class="glass card p-6 rounded-2xl border-l-4 border-red-500 cursor-pointer hover:scale-105 transition-transform">
-      <p class="card-label text-red-400">Attacks </p>
-      <div class="flex items-end justify-between">
+    <div id="cardAttacks" class="glass card p-6 rounded-2xl border-l-4 border-red-500 cursor-pointer relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all duration-500"></div>
+      <p class="card-label text-red-400 relative z-10">🚨 Attacks</p>
+      <div class="flex items-end justify-between relative z-10">
         <h2 id="threatsBlocked" class="text-4xl font-bold text-red-500">—</h2>
         <span class="pulse w-3 h-3 bg-red-500 rounded-full mb-3"></span>
       </div>
-    </div>
-
-    <div id="cardSuspicious" class="glass card p-6 rounded-2xl border-l-4 border-orange-500 cursor-pointer hover:scale-105 transition-transform">
-      <p class="card-label text-orange-400">Suspicious</p>
-      <div class="flex items-end justify-between">
-        <h2 id="suspicious" class="text-4xl font-bold text-orange-400">—</h2>
-        <i class="fa-solid fa-triangle-exclamation text-orange-400 text-xl"></i>
+      <div class="mt-2 text-xs text-red-400/70">
+        <i class="fa-solid fa-bolt mr-1"></i> Critical threats blocked
       </div>
     </div>
 
-    <div class="glass card p-6 rounded-2xl border-l-4 border-green-500">
-      <p class="card-label text-green-400">Normal</p>
-      <div class="flex items-end justify-between">
+    <div id="cardSuspicious" class="glass card p-6 rounded-2xl border-l-4 border-orange-500 cursor-pointer relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-all duration-500"></div>
+      <p class="card-label text-orange-400 relative z-10">⚠️ Suspicious</p>
+      <div class="flex items-end justify-between relative z-10">
+        <h2 id="suspicious" class="text-4xl font-bold text-orange-400">—</h2>
+        <i class="fa-solid fa-triangle-exclamation text-orange-400 text-2xl opacity-80"></i>
+      </div>
+      <div class="mt-2 text-xs text-orange-400/70">
+        <i class="fa-solid fa-eye mr-1"></i> Under investigation
+      </div>
+    </div>
+
+    <div class="glass card p-6 rounded-2xl border-l-4 border-green-500 relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-2xl group-hover:bg-green-500/10 transition-all duration-500"></div>
+      <p class="card-label text-green-400 relative z-10">✅ Normal</p>
+      <div class="flex items-end justify-between relative z-10">
         <h2 id="normalCount" class="text-4xl font-bold text-green-400">—</h2>
-        <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+        <i class="fa-solid fa-circle-check text-green-400 text-2xl opacity-80"></i>
+      </div>
+      <div class="mt-2 text-xs text-green-400/70">
+        <i class="fa-solid fa-check mr-1"></i> Clean traffic
       </div>
     </div>
   </div>
@@ -70,21 +96,23 @@
   <!-- ═══ ANALYTICS CHARTS ═══ -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
     <!-- Threat Distribution Chart -->
-    <div class="glass p-6 rounded-2xl">
-      <h3 class="font-bold text-lg mb-4 text-slate-200">
+    <div class="glass p-6 rounded-2xl relative overflow-hidden group">
+      <div class="absolute top-0 left-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+      <h3 class="font-bold text-lg mb-4 text-slate-200 relative z-10">
         <i class="fa-solid fa-chart-pie text-blue-400 mr-2"></i> Threat Distribution
       </h3>
-      <div class="flex items-center justify-center" style="height: 280px;">
+      <div class="flex items-center justify-center relative z-10" style="height: 280px;">
         <canvas id="threatChart"></canvas>
       </div>
     </div>
 
     <!-- Attack Timeline Chart -->
-    <div class="glass p-6 rounded-2xl">
-      <h3 class="font-bold text-lg mb-4 text-slate-200">
+    <div class="glass p-6 rounded-2xl relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-all duration-700"></div>
+      <h3 class="font-bold text-lg mb-4 text-slate-200 relative z-10">
         <i class="fa-solid fa-chart-line text-red-400 mr-2"></i> Detection Timeline
       </h3>
-      <div class="flex items-center justify-center" style="height: 280px;">
+      <div class="flex items-center justify-center relative z-10" style="height: 280px;">
         <canvas id="timelineChart"></canvas>
       </div>
     </div>
@@ -95,19 +123,20 @@
 
     <!-- ALERTS PANEL (2/3 width) -->
     <div class="lg:col-span-2 glass rounded-2xl overflow-hidden flex flex-col" style="max-height:520px">
-      <div class="p-5 border-b border-white/10 flex justify-between items-center">
+      <div class="p-5 border-b border-white/10 flex justify-between items-center bg-slate-800/30">
         <h3 class="font-bold text-lg text-slate-200">
-          <i class="fa-solid fa-bell text-red-400 mr-1"></i> Live Security Alerts
-          <span id="alertCount" class="ml-2 text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">0</span>
+          <i class="fa-solid fa-bell text-red-400 mr-2 animate-pulse"></i> Live Security Alerts
+          <span id="alertCount" class="ml-2 text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full font-semibold">0</span>
         </h3>
-        <button id="btnClearAlerts" class="text-slate-400 hover:text-red-400 text-sm transition">
+        <button id="btnClearAlerts" class="text-slate-400 hover:text-red-400 text-sm transition-all hover:scale-105">
           <i class="fa-solid fa-trash-can mr-1"></i> Clear All
         </button>
       </div>
       <ul id="alertsList" class="divide-y divide-white/5 overflow-y-auto flex-1">
-        <li class="p-6 text-center text-slate-500 text-sm" id="noAlerts">
-          <i class="fa-solid fa-shield-halved text-2xl mb-2 block"></i>
-          No alerts yet — submit logs and run detection
+        <li class="p-8 text-center text-slate-500 text-sm" id="noAlerts">
+          <i class="fa-solid fa-shield-halved text-4xl mb-3 block opacity-20"></i>
+          <p class="font-semibold">No alerts detected</p>
+          <p class="text-xs mt-1">Run detection to start monitoring threats</p>
         </li>
       </ul>
     </div>
@@ -117,29 +146,46 @@
 
       <!-- HEALTH SCORE -->
       <div class="glass p-6 rounded-2xl">
-        <h3 class="font-bold text-lg mb-4"><i class="fa-solid fa-heart-pulse text-blue-400 mr-1"></i> System Health</h3>
-        <div class="bg-slate-800/50 p-4 rounded-xl">
-          <div class="flex justify-between text-xs text-slate-400 mb-1">
+        <h3 class="font-bold text-lg mb-4">
+          <i class="fa-solid fa-heart-pulse text-blue-400 mr-2"></i> System Health
+        </h3>
+        <div class="bg-slate-800/50 p-4 rounded-xl mb-4">
+          <div class="flex justify-between text-xs text-slate-400 mb-2">
             <span>Health Score</span>
-            <span id="healthLabel" class="text-blue-400">—</span>
+            <span id="healthLabel" class="text-blue-400 font-semibold">—</span>
           </div>
           <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
             <div id="healthBar" class="h-full rounded-full transition-all duration-700" style="width:0%; background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e)"></div>
           </div>
         </div>
-        <div class="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
-          <div class="bg-red-500/10 rounded-lg p-2">
-            <p class="text-red-400 font-bold text-lg" id="statAttacks">—</p>
-            <p class="text-slate-500">Attacks</p>
+        <div class="grid grid-cols-3 gap-3 text-center text-xs">
+          <div class="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+            <p class="text-red-400 font-bold text-xl" id="statAttacks">—</p>
+            <p class="text-slate-500 mt-1">Attacks</p>
           </div>
-          <div class="bg-orange-500/10 rounded-lg p-2">
-            <p class="text-orange-400 font-bold text-lg" id="statSuspicious">—</p>
-            <p class="text-slate-500">Suspicious</p>
+          <div class="bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+            <p class="text-orange-400 font-bold text-xl" id="statSuspicious">—</p>
+            <p class="text-slate-500 mt-1">Suspicious</p>
           </div>
-          <div class="bg-green-500/10 rounded-lg p-2">
-            <p class="text-green-400 font-bold text-lg" id="statNormal">—</p>
-            <p class="text-slate-500">Normal</p>
+          <div class="bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+            <p class="text-green-400 font-bold text-xl" id="statNormal">—</p>
+            <p class="text-slate-500 mt-1">Normal</p>
           </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="glass p-6 rounded-2xl">
+        <h3 class="font-bold text-lg mb-4">
+          <i class="fa-solid fa-bolt text-yellow-400 mr-2"></i> Quick Actions
+        </h3>
+        <div class="space-y-3">
+          <button id="btnRefreshLogs" class="w-full bg-slate-800/50 hover:bg-slate-700/50 p-3 rounded-lg text-sm transition-all text-left hover:scale-105">
+            <i class="fa-solid fa-arrows-rotate text-blue-400 mr-2"></i> Refresh Data
+          </button>
+          <button id="btnClearLogs" class="w-full bg-slate-800/50 hover:bg-slate-700/50 p-3 rounded-lg text-sm transition-all text-left hover:scale-105">
+            <i class="fa-solid fa-trash text-red-400 mr-2"></i> Clear All Logs
+          </button>
         </div>
       </div>
 
@@ -148,17 +194,12 @@
 
   <!-- ═══ LOGS TABLE ═══ -->
   <div class="glass rounded-2xl overflow-hidden mb-10">
-    <div class="p-5 border-b border-white/10 flex justify-between items-center">
+    <div class="p-5 border-b border-white/10 flex justify-between items-center bg-slate-800/30">
       <h3 class="font-bold text-lg text-slate-200">
-        <i class="fa-solid fa-list text-blue-400 mr-1"></i> Recent Logs
+        <i class="fa-solid fa-list text-blue-400 mr-2"></i> Recent Log Activity
       </h3>
-      <div class="flex items-center gap-3">
-        <button id="btnClearLogs" class="text-slate-400 hover:text-red-400 text-sm transition">
-          <i class="fa-solid fa-trash-can mr-1"></i> Clear All
-        </button>
-        <button id="btnRefreshLogs" class="text-slate-400 hover:text-blue-400 text-sm transition">
-          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
-        </button>
+      <div class="text-xs text-slate-500">
+        <i class="fa-solid fa-clock mr-1"></i> Last 100 entries
       </div>
     </div>
     <div class="overflow-x-auto">
@@ -173,7 +214,10 @@
           </tr>
         </thead>
         <tbody id="logsBody" class="divide-y divide-white/5">
-          <tr><td colspan="5" class="px-5 py-6 text-center text-slate-500">No logs yet</td></tr>
+          <tr><td colspan="5" class="px-5 py-8 text-center text-slate-500">
+            <i class="fa-solid fa-inbox text-3xl mb-2 block opacity-20"></i>
+            No logs available
+          </td></tr>
         </tbody>
       </table>
     </div>
@@ -182,25 +226,25 @@
   <!-- ═══ DETAILS MODAL ═══ -->
   <div id="detailsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
     <div class="glass rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-      <div class="p-6 border-b border-white/10 flex justify-between items-center">
+      <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-800/30">
         <h3 id="modalTitle" class="font-bold text-2xl text-slate-200">
           <i class="fa-solid fa-shield-virus text-red-400 mr-2"></i> Alert Details
         </h3>
-        <button id="btnCloseModal" class="text-slate-400 hover:text-white text-2xl transition">
+        <button id="btnCloseModal" class="text-slate-400 hover:text-white text-2xl transition-all hover:scale-110 hover:rotate-90">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <div class="p-6 overflow-y-auto flex-1">
         <div id="modalStats" class="grid grid-cols-3 gap-4 mb-6">
-          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center border border-white/5">
             <p class="text-3xl font-bold text-red-400" id="modalTotal">0</p>
             <p class="text-xs text-slate-400 mt-1">Total Alerts</p>
           </div>
-          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center border border-white/5">
             <p class="text-3xl font-bold text-blue-400" id="modalUniqueIPs">0</p>
             <p class="text-xs text-slate-400 mt-1">Unique IPs</p>
           </div>
-          <div class="bg-slate-800/50 p-4 rounded-xl text-center">
+          <div class="bg-slate-800/50 p-4 rounded-xl text-center border border-white/5">
             <p class="text-3xl font-bold text-orange-400" id="modalAvgScore">0.00</p>
             <p class="text-xs text-slate-400 mt-1">Avg Threat Score</p>
           </div>
@@ -225,8 +269,12 @@
     </div>
   </div>
 
-  <footer class="mt-12 text-center text-xs text-slate-600">
-    SkyShield Security Operations Center &copy; 2026 &mdash; AI-Powered Cloud Threat Detection
+  <footer class="mt-16 text-center text-xs text-slate-600 border-t border-white/5 pt-8">
+    <p class="mb-2">
+      <i class="fa-solid fa-shield-halved mr-2"></i>
+      SkyShield Security Operations Center &copy; 2026
+    </p>
+    <p class="text-slate-700">AI-Powered Cloud Threat Detection &amp; Response System</p>
   </footer>
 
   <script src="app.js"></script>

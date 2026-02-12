@@ -89,10 +89,10 @@ def predict_log(log_data: dict) -> tuple:
         print(f"⚠️  Prediction error: {e}")
         return "Error", 0.0
 
-    # Classification thresholds
-    if probability > 0.6:
+    # Classification thresholds (VERY STRICT - tuned for this dataset)
+    if probability > 0.12:
         label = "Attack"
-    elif probability > 0.3:
+    elif probability > 0.05:
         label = "Suspicious"
     else:
         label = "Normal"
